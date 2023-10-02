@@ -50,10 +50,14 @@ def set_ac(team_id):
         "Authorization": f"Bearer {token}"
     }
 
-    response = requests.get(url, headers=headers)
-    return response.status_code == 200
+    response = requests.post(url, headers=headers)
+    if response.status_code == 200:
+        return True
+    else:
+        print(f"设置{team_id} AC失败:{response.status_code},{response.text}")
+        return False
 
 if __name__ == "__main__":
-    team = get_team("913847")
+    team = get_team("914160")
 
     print(f"{team.name},{team.status},{team.coach.name},{team.contestants[0].name},{team.contestants[1].name},{team.contestants[2].name}")

@@ -24,27 +24,28 @@ def send_ac(team, send_to):
     if send_to == "CONTESTANTS":
         for contestant in team.contestants:
             msg = f"{contestant.name}同学你好，我是{CONTEST_NAME}工作人员，你们的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对已通过，预祝同学取得优异成绩！"
-            mail.send(contestant.email, "ICPC队伍审核通过通知", msg)
+            mail.send(contestant.email, f"{CONTEST_SHORT_NAME}队伍审核通过通知", msg)
     if send_to == "COACH":
         msg = f"尊敬的{team.school}{team.coach.name}教练，我是{CONTEST_NAME}工作人员，贵校报名的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对已通过，预祝贵校取得优异成绩！"
-        mail.send(team.coach.email, "ICPC队伍审核通过通知", msg)
+        mail.send(team.coach.email, f"{CONTEST_SHORT_NAME}队伍审核通过通知", msg)
 
 
 def send_error(team, send_to, errors):
     if send_to == "CONTESTANTS":
         for contestant in team.contestants:
-            msg = f"{contestant.name}同学你好，我是{CONTEST_NAME}工作人员，你们的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对因以下原因暂未核对通过，请及时更正：<br>"
+            msg = f"{contestant.name}同学你好，我是{CONTEST_NAME}工作人员，你们的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对因以下原因暂未核对通过，请及时更正：<br><br>"
             for i, error in enumerate(errors):
                 msg += f"{i + 1}.{error}<br>"
-            msg += "请更正后耐心等待，我们将会不定期重新对所有队伍进行核验，核验结果将通过邮件通知。<br>"
+            msg += "<br>请更正后耐心等待，我们将会不定期重新对所有队伍进行核验，核验结果将通过邮件通知。<br>"
             msg += f"如有疑问需联系工作人员，请提供以下信息：队伍id:{team.team_id},核验id:{check_id}"
-            mail.send(contestant.email, "ICPC队伍审核未通过通知", msg)
+            mail.send(contestant.email, f"{CONTEST_SHORT_NAME}队伍审核未通过通知", msg)
     if send_to == "COACH":
-        msg = f"尊敬的{team.school}{team.coach.name}教练，我是{CONTEST_NAME}工作人员，贵校报名的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对因以下原因暂未核对通过，请您及时更正：<br>"
+        msg = f"尊敬的{team.school}{team.coach.name}教练，我是{CONTEST_NAME}工作人员，贵校报名的队伍\"{team.name}({team.english_name})\"与icpc.global信息核对因以下原因暂未核对通过，请您及时更正：<br><br>"
         for i, error in enumerate(errors):
             msg += f"{i + 1}.{error}<br>"
-        msg += "请您更正后耐心等待，我们将会不定期重新对所有队伍进行核验，核验结果将通过邮件通知。"
-        mail.send(team.coach.email, "ICPC队伍审核未通过通知", msg)
+        msg += "<br>请您更正后耐心等待，我们将会不定期重新对所有队伍进行核验，核验结果将通过邮件通知。<br>"
+        msg += f"如有疑问需联系工作人员，请提供以下信息：队伍id:{team.team_id},核验id:{check_id}"
+        mail.send(team.coach.email, f"{CONTEST_SHORT_NAME}队伍审核未通过通知", msg)
 
 
 def handle_error(team, errors):
@@ -96,16 +97,22 @@ def handle_success(team):
 
 
 def check(team):
+    ac_team: ACTeamRecord = session.query(ACTeamRecord).filter_by(team_id=team.team_id).first()
+    if ac_team is not None:  # 已经AC直接跳过
+        print(f"{team.team_id}已存在AC记录，跳过核验")
+        handle_success(team)
+        return
+
     icpc_team = get_team(team.team_id)
     errors = list()
-    if icpc_team.english_name.lower() != team.english_name.lower():
+    if icpc_team.english_name.lower().replace('\xa0', ' ') != team.english_name.lower().replace('\xa0', ' '):
         errors.append(
-            f"队伍名称不匹配，icpc.global报名的名称为\"{icpc_team.english_name}\",报名表中填写名称为\"{team.english_name}\"。请确保以上两项<b>逐字符相同</b>")
+            f"队伍名称不匹配，icpc.global报名的名称为\"{icpc_team.english_name}\",报名表中填写名称为\"{team.english_name}\"，请确保以上两项<b>逐字符相同</b>。")
 
     if icpc_team.coach.english_name.lower() != team.coach.english_name.lower():
         errors.append(
-            f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"。"
-            f"请确保以上两项<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名")
+            f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"，"
+            f"请确保以上两项<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名，另外请注意必须是icpc.global上的coach与报名表一致,cocoach一致无效。")
 
     contests_icpc = [icpc_team.contestants[0].english_name, icpc_team.contestants[1].english_name,
                      icpc_team.contestants[2].english_name]

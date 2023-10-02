@@ -31,7 +31,10 @@ class Mail:
         self.server = smtplib.SMTP_SSL(self.smtp_server, self.smtp_port, context=self.context)
         self.server.login(self.sender_email, self.password)
 
-    def send(self, receiver, title, body):
+    def send(self, receiver:str, title, body):
+        if receiver.find("@") == -1:
+            print(f"邮件地址非法:{receiver}")
+            return
         message = MIMEMultipart()
         message["From"] = self.sender_email
         message["To"] = receiver
