@@ -1,0 +1,4 @@
+config.ini
+token.txt
+*.xlsx
+*.db
