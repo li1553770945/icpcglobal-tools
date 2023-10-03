@@ -95,6 +95,20 @@ def handle_success(team):
 
     print(f"核验通过,{team.team_id}")
 
+def check_name(name1,name2):
+    if name1.lower().replace('\xa0', ' ') == name2.lower().replace('\xa0', ' '):
+        return True
+    name1 = name1.split(' ')
+    name2 = name2.split(' ')
+    if len(name1) != len(name2):
+        return False
+
+    name1.sort()
+    name2.sort()
+    for i in range(0,len(name1)):
+        if name1[i] != name2[i]:
+            return False
+    return True
 
 def check(team):
 
@@ -110,27 +124,27 @@ def check(team):
         errors.append(
             f"队伍名称不匹配，icpc.global报名的名称为\"{icpc_team.english_name}\",报名表中填写名称为\"{team.english_name}\"，请确保以上两项<b>逐字符相同</b>。")
 
-    if icpc_team.coach.english_name.lower().replace('\xa0', ' ') != team.coach.english_name.lower().replace('\xa0', ' '):
+    if not check_name(icpc_team.coach.english_name,team.coach.english_name):
         for cocoach in icpc_team.cocoach:
-            if cocoach.english_name.lower().replace('\xa0', ' ') == team.coach.english_name.lower().replace('\xa0', ' '):
+            if check_name(cocoach.english_name,team.coach.english_name):
                 break
         else:
             errors.append(
-                f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"，"
-                f"请确保以上两项<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名。")
+            f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"，"
+            f"请确保以上两项<b>逐字符相同</b>。")
 
     contests_icpc = [icpc_team.contestants[0].english_name, icpc_team.contestants[1].english_name,
                      icpc_team.contestants[2].english_name]
     for contestant in team.contestants:
         is_find = False
         for contestant_icpc in icpc_team.contestants:
-            if contestant_icpc.english_name.lower() == contestant.english_name.lower():
+            if check_name(contestant_icpc.english_name,contestant.english_name):
                 is_find = True
                 break
         if not is_find:
             errors.append(
                 f"报名表中队员\"{contestant.english_name}\"未能在icpc.global中找到。icpc.global中队员为{contests_icpc}"
-                f"请确保队员姓名与icpc.global上<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名")
+                f"请确保队员姓名与icpc.global上<b>逐字符相同</b>。")
 
     if len(errors) == 0:
         handle_success(team)
