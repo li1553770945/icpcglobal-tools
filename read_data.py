@@ -7,7 +7,7 @@ def read_excel_data(file_name):
     school_dict = dict()
     wb = load_workbook(file_name)
     ws = wb.active
-    for row in range(4, ws.max_row + 1):
+    for row in range(2, ws.max_row + 1):
         team_type = ws.cell(row, TEAM_TYPE_COL).value
         if team_type != OFFICIAL_TEAM_NAME:
             continue

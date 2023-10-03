@@ -19,14 +19,18 @@ def get_team(team_id):
     members = requests.get(team_members_url, headers=headers).json()
     coach = None
     contestants = list()
+    cocoach = list()
     for member in members:
         if member['role'] == 'CONTESTANT':
             contestants.append(Person(member['name'], member['name'], member['email']))
         elif member['role'] == 'COACH':
             coach = Person(member['name'], member['name'], member['email'])
+        elif member['role'] == 'COCOACH':
+            cocoach.append(Person(member['name'],member['name'],member['email']))
 
     team = Team("",team_name, team_name, team_id, contestants, coach)
     team.status = response['status']
+    team.cocoach = cocoach
     return team
 
 def test_token():

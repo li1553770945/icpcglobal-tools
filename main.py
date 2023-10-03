@@ -97,11 +97,12 @@ def handle_success(team):
 
 
 def check(team):
+
     ac_team: ACTeamRecord = session.query(ACTeamRecord).filter_by(team_id=team.team_id).first()
     if ac_team is not None:  # 已经AC直接跳过
         print(f"{team.team_id}已存在AC记录，跳过核验")
         handle_success(team)
-        return
+        return True
 
     icpc_team = get_team(team.team_id)
     errors = list()
@@ -109,10 +110,14 @@ def check(team):
         errors.append(
             f"队伍名称不匹配，icpc.global报名的名称为\"{icpc_team.english_name}\",报名表中填写名称为\"{team.english_name}\"，请确保以上两项<b>逐字符相同</b>。")
 
-    if icpc_team.coach.english_name.lower() != team.coach.english_name.lower():
-        errors.append(
-            f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"，"
-            f"请确保以上两项<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名，另外请注意必须是icpc.global上的coach与报名表一致,cocoach一致无效。")
+    if icpc_team.coach.english_name.lower().replace('\xa0', ' ') != team.coach.english_name.lower().replace('\xa0', ' '):
+        for cocoach in icpc_team.cocoach:
+            if cocoach.english_name.lower().replace('\xa0', ' ') == team.coach.english_name.lower().replace('\xa0', ' '):
+                break
+        else:
+            errors.append(
+                f"教练姓名不匹配，icpc.global报名的名称为\"{icpc_team.coach.english_name}\",报名表中填写名称为\"{team.coach.english_name}\"，"
+                f"请确保以上两项<b>逐字符相同</b>,例如\"Zhang San\"、\"San Zhang\"会被认为是不同姓名。")
 
     contests_icpc = [icpc_team.contestants[0].english_name, icpc_team.contestants[1].english_name,
                      icpc_team.contestants[2].english_name]
@@ -129,8 +134,10 @@ def check(team):
 
     if len(errors) == 0:
         handle_success(team)
+        return True
     else:
         handle_error(team, errors)
+        return False
 
 
 if __name__ == "__main__":
@@ -140,9 +147,18 @@ if __name__ == "__main__":
         session = init_database()
         mail = Mail()
         schools = read_excel_data(FILE_NAME)
+
+        total_num = 0
+        ac_num = 0
+        error_num = 0
         for school in schools:
             for team in school.teams:
-                check(team)
+                total_num += 1
+                if check(team):
+                    ac_num += 1
+                else:
+                    error_num += 1
         session.close()
+        print(f"已完成，共检查{total_num}队，AC{ac_num}队，有错误{error_num}队")
     else:
         print("token已失效")
