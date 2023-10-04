@@ -96,7 +96,9 @@ def handle_success(team):
     print(f"核验通过,{team.team_id}")
 
 def check_name(name1,name2):
-    if name1.lower().replace('\xa0', ' ') == name2.lower().replace('\xa0', ' '):
+    name1 = name1.lower().replace('\xa0', ' ')
+    name2 = name2.lower().replace('\xa0', ' ')
+    if name1 == name2:
         return True
     name1 = name1.split(' ')
     name2 = name2.split(' ')
