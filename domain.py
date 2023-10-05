@@ -17,7 +17,10 @@ class Team:
         self.coach = coach
         self.team_id = team_id
         self.cocoach:List[Person] = list()
+
         self.status = None
+        self.contest_id = None
+        self.contest_name = None
 
 
 class School:

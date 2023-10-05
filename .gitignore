@@ -3,3 +3,5 @@ token.txt
 *.xlsx
 *.db
 constant.py
+check_ac_num.py
+venv

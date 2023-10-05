@@ -1,6 +1,6 @@
 from constant import *
 from read_data import read_excel_data
-from icpcglobal import get_team, test_token, set_ac
+from icpcglobal import get_team, test_token, set_ac,get_contest_name
 from dao import ACTeamRecord, ErrorRecord, init_database
 from datetime import datetime
 from mail_utils import Mail
@@ -96,8 +96,8 @@ def handle_success(team):
     print(f"核验通过,{team.team_id}")
 
 def check_name(name1,name2):
-    name1 = name1.lower().replace('\xa0', ' ')
-    name2 = name2.lower().replace('\xa0', ' ')
+    name1 = name1.lower().replace('\xa0', ' ').strip()
+    name2 = name2.lower().replace('\xa0', ' ').strip()
     if name1 == name2:
         return True
     name1 = name1.split(' ')
@@ -121,7 +121,13 @@ def check(team):
         return True
 
     icpc_team = get_team(team.team_id)
+    if icpc_team is None:
+        print(f"icpc获取队伍{team.team_id}失败")
+        return  False
     errors = list()
+    if icpc_team.contest_id != CONTEST_ID:
+        errors.append(f"比赛id核验失败，您报名的比赛是\"{icpc_team.contest_name}(ID为{icpc_team.contest_id})\",本届比赛是\"{contest_name}(ID为{CONTEST_ID})\"，请检查您的队伍id是否正确，并且是否报名了正确的比赛。")
+
     if icpc_team.english_name.lower().replace('\xa0', ' ') != team.english_name.lower().replace('\xa0', ' '):
         errors.append(
             f"队伍名称不匹配，icpc.global报名的名称为\"{icpc_team.english_name}\",报名表中填写名称为\"{team.english_name}\"，请确保以上两项<b>逐字符相同</b>。")
@@ -160,6 +166,7 @@ if __name__ == "__main__":
 
     check_id: str = "002"
     if test_token():
+        contest_name = get_contest_name()
         session = init_database()
         mail = Mail()
         schools = read_excel_data(FILE_NAME)
