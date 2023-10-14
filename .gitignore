@@ -1,7 +1,9 @@
 config.ini
-token.txt
+data/token.txt
 *.xlsx
 *.db
-constant.py
-check_ac_num.py
+data/constant.py
+other-tools/check_ac_num.py
 venv
+.stfolder
+.stversions

@@ -1,8 +1,7 @@
 import requests
-import configparser
-from domain import Team, Person
-from constant import *
-with open("token.txt","r") as f:
+from utils.domain import Team, Person
+from data.constant import *
+with open("data/token.txt", "r") as f:
     token = f.read()
 
 
@@ -15,7 +14,11 @@ def get_team(team_id):
     }
     response = requests.get(team_info_url, headers=headers)
     try:
+        if response.status_code !=200:
+            print(f"获取队伍{team_id}信息失败,status_code:{response.status_code},text:{response.text}")
+            return None
         response = response.json()
+
         team_name = response['name']
         contest_id = response['contest']['id']
         contest_name = response['contest']['name']
@@ -83,9 +86,10 @@ def get_all_ac_team():
 
     response = requests.get(url, headers=headers)
     teams = response.json()
-    with open("acs.csv","w") as f:
-        for team in teams:
-            f.write(f"{team['team']['id']}")
+    return teams
+    # with open("acs.csv","w") as f:
+    #     for team in teams:
+    #         f.write(f"{team['team']['id']}\n")
 
 
 def get_contest_name():

@@ -8,7 +8,7 @@ Base = declarative_base()
 
 
 def init_database():
-    engine = create_engine('sqlite:///icpc.db')
+    engine = create_engine(r'sqlite:///data/icpc.db')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)
     session = Session()

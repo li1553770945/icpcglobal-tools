@@ -1,19 +1,16 @@
-from dao import ACTeamRecord,init_database
-from icpcglobal import get_team, test_token
-
+from utils.icpcglobal import get_all_ac_team
+from utils.dao import ACTeamRecord,init_database
 if __name__ == "__main__":
+    all_teams = get_all_ac_team()
+    icpc_ids = [str(team['id']) for team in all_teams]
+    icpc_ids = set(icpc_ids)
 
-    teams = list()
-    if test_token():
-        session = init_database()
-        ac_teams = session.query(ACTeamRecord).all()
-        for ac_team in ac_teams:
-            if ac_team.team_id in teams:
-                raise AssertionError(f"{ac_team.team_id}重复！")
-            # icpc_team = get_team(ac_team.team_id)
-            # if icpc_team.status != "ACCEPTED":
-            #     print(f"team {ac_team.team_id}已经审核AC，但未在icpc.global AC")
-            # else:
-            #     print(f"{ac_team.team_id}已经AC")
-    else:
-        print("token已失效")
+    session = init_database()
+    ac_teams = session.query(ACTeamRecord).all()
+    print(ac_teams)
+    local_ids = [team.team_id for team in ac_teams]
+    local_ids = set(local_ids)
+
+    print(icpc_ids - local_ids)
+    print(local_ids - icpc_ids)
+

@@ -1,6 +1,6 @@
 from openpyxl import load_workbook
-from constant import *
-from domain import *
+from data.constant import *
+from utils.domain import *
 
 def read_excel_data(file_name):
     schools = list()
