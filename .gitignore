@@ -1,9 +1,11 @@
-config.ini
+config.yaml
 data/token.txt
 *.xlsx
 *.db
-data/constant.py
 other-tools/check_ac_num.py
 venv
 .stfolder
 .stversions
+**/__pycache__/
+email
+.DS_Store

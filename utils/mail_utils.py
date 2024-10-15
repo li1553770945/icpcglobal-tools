@@ -1,29 +1,33 @@
+import os.path
 import smtplib
 import ssl
 import time
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+import yaml  # Import the yaml module
+import re
 
-import configparser
+from utils.icpcglobal import logger
+from utils.logger import setup_logger
+# Load the YAML configuration file
+with open('config.yaml', 'r') as file:
+    config = yaml.safe_load(file)
 
-# 创建并读取配置文件
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-# 从配置文件中获取发送者邮箱地址和密码
-sender_email = config.get('Email', 'sender_email')
-password = config.get('Email', 'password')
-
-# 其他邮件发送代码...
+# Access configuration data
+sender_email = config['email']['sender_email']
+password = config['email']['password']
+reply_to = config['email']['reply_to']
+# Other email sending code...
+logger = setup_logger()
 
 
 class Mail:
     def __init__(self):
         self.server = None
-        self.sender_email = config.get('Email', 'sender_email')
-        self.password = config.get('Email', 'password')
-        self.smtp_server = config.get('Email', 'smtp_server')
-        self.smtp_port = int(config.get('Email','smtp_port'))
+        self.sender_email = config['email']['sender_email']
+        self.password = config['email']['password']
+        self.smtp_server = config['email']['smtp_server']
+        self.smtp_port = config['email']['smtp_port']
         self.context = ssl.create_default_context()
         self.login()
 
@@ -32,17 +36,31 @@ class Mail:
         self.server.login(self.sender_email, self.password)
 
     def send(self, receiver:str, title, body):
-        if receiver.find("@") == -1:
-            print(f"邮件地址非法:{receiver}")
+        reg = r"^[A-Za-z0-9]+([_\.][A-Za-z0-9]+)*@([A-Za-z0-9\-]+\.)+[A-Za-z]{2,6}$"
+        if re.match(reg, receiver) is None:
+            logger.error(f"Invalid email address: {receiver}")
             return
         message = MIMEMultipart()
         message["From"] = self.sender_email
         message["To"] = receiver
         message["Subject"] = title
+        message["Reply-To"] = reply_to  # 设置回复邮箱地址
 
-        body = body
         message.attach(MIMEText(body, "html"))
+        self.save_to_file(message,body)
 
-        # print(receiver,title,body)
         self.server.sendmail(self.sender_email, receiver, message.as_string())
-        time.sleep(1)
+        time.sleep(1)  # Sleep for a second to avoid sending too quickly
+
+    def save_to_file(self,message:MIMEMultipart,body):
+        name = f"{message['To']}-{message['Subject']}.html"
+        path ="email"
+        path_name = os.path.join(path, name)
+        os.makedirs(path, exist_ok=True)
+        with open(path_name,"w",encoding="utf-8") as f:
+            f.write(body)
+
+if __name__ == '__main__':
+    # Example usage:
+    mail_client = Mail()
+    mail_client.send("2386360020@qq.com", "Hello", "<h1>Test Email</h1>")

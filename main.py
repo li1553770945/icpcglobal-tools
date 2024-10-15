@@ -1,24 +1,24 @@
 from data.constant import *
 from utils.read_data import read_excel_data
-from utils.icpcglobal import get_team, test_token, set_ac, get_contest_name
+from utils.icpcglobal import get_team, test_token, set_ac, get_contest_name, logger
 from utils.dao import ACTeamRecord, ErrorRecord, init_database
 from datetime import datetime
 from utils.mail_utils import Mail
 import re
-
+from utils.logger import setup_logger
 
 def print_data(schools):
     for school in schools:
-        print(f"学校\"{school.name}\"共报名{len(school.teams)}支队伍：\n")
+        logger.info(f"学校\"{school.name}\"共报名{len(school.teams)}支队伍：\n")
         for team in school.teams:
-            print(f"{team.name},{team.english_name},{team.team_id}")
-            print(f"教练：{team.coach.name}({team.coach.english_name})")
-            print(f"队员:{team.contestants[0].name}({team.contestants[0].english_name})"
+            logger.info(f"{team.name},{team.english_name},{team.team_id}")
+            logger.info(f"教练：{team.coach.name}({team.coach.english_name})")
+            logger.info(f"队员:{team.contestants[0].name}({team.contestants[0].english_name})"
                   f",{team.contestants[1].name}({team.contestants[1].english_name})"
                   f",{team.contestants[2].name}({team.contestants[2].english_name})")
-            print("\n")
+            logger.info("\n")
 
-        print("--------------")
+        logger.info("--------------")
 
 
 def send_ac(team, send_to):
@@ -67,7 +67,7 @@ def handle_error(team, errors):
         error_team.send_to_coach_time = datetime.now()
         session.commit()
 
-    print(f"核验失败,{team.team_id},{errors}")
+    logger.warning(f"核验失败,{team.team_id},{errors}")
 
 
 def handle_success(team):
@@ -94,7 +94,7 @@ def handle_success(team):
             ac_team.ac_on_icpcglobal_time = datetime.now()
             session.commit()
 
-    print(f"核验通过,{team.team_id}")
+    logger.info(f"核验通过,{team.team_id}")
 
 
 def check_name(name1, name2):
@@ -116,10 +116,10 @@ def check_name(name1, name2):
 
 
 def check(team):
-    print(f"正在核验{team.team_id}")
+    logger.info(f"正在核验{team.team_id}")
     ac_team: ACTeamRecord = session.query(ACTeamRecord).filter_by(team_id=team.team_id).first()
     if ac_team is not None:  # 已经AC直接跳过
-        print(f"{team.team_id}已存在AC记录，跳过核验")
+        logger.info(f"{team.team_id}已存在AC记录，跳过核验")
         handle_success(team)
         return True
 
@@ -153,13 +153,15 @@ def check(team):
 
     contests_icpc = [contestant.english_name for contestant in icpc_team.contestants]
     for contestant in team.contestants:
+        if contestant.english_name == "无":
+            continue
         if not re.match(pattern, contestant.english_name):
-            errors.append(f"报名表中填写队员英文名为:{team.contestant.english_name}，应该只包含大小写字母和空格。")
+            errors.append(f"报名表中填写队员英文名为:{contestant.english_name}，应该只包含大小写字母和空格。")
             continue
 
         is_find = False
         for contestant_icpc in icpc_team.contestants:
-            if contestant_icpc.english_name == "无" or check_name(contestant_icpc.english_name, contestant.english_name):
+            if check_name(contestant_icpc.english_name, contestant.english_name):
                 is_find = True
                 break
         if not is_find:
@@ -176,9 +178,11 @@ def check(team):
 
 
 if __name__ == "__main__":
+    check_id: str = "001"
 
-    check_id: str = "004"
+    logger = setup_logger()
     if test_token():
+
         contest_name = get_contest_name()
         session = init_database()
         mail = Mail()
@@ -195,6 +199,6 @@ if __name__ == "__main__":
                 else:
                     error_num += 1
         session.close()
-        print(f"已完成，共检查{total_num}队，AC{ac_num}队，有错误{error_num}队")
+        logger.info(f"已完成，共检查{total_num}队，AC{ac_num}队，有错误{error_num}队")
     else:
-        print("token已失效")
+        logger.info("token已失效")
