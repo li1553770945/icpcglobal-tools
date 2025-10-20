@@ -60,7 +60,7 @@ def get_team(team_id):
             members = requests.get(team_members_url, headers=headers,proxies=proxies).json()
             break
         except Exception as err:
-            logger.error(f"获取队伍{team_id}成员失败,response:{members},error:{err}")
+            logger.error(f"获取队伍{team_id}成员失败,error:{err}")
             if i == MAX_RETRY - 1:
                 return None
     coach = None

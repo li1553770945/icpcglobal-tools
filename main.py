@@ -178,7 +178,7 @@ def check(team):
 
 
 if __name__ == "__main__":
-    check_id: str = "001"
+    check_id: str = "004"
 
     logger = setup_logger()
     if test_token():

@@ -48,9 +48,10 @@ class Mail:
 
         message.attach(MIMEText(body, "html"))
         self.save_to_file(message,body)
-
-        self.server.sendmail(self.sender_email, receiver, message.as_string())
-        time.sleep(1)  # Sleep for a second to avoid sending too quickly
+        try:
+            self.server.sendmail(self.sender_email, receiver, message.as_string())
+        except Exception as err:
+            logger.error(f"发送邮件失败:{err}")
 
     def save_to_file(self,message:MIMEMultipart,body):
         name = f"{message['To']}-{message['Subject']}.html"
