@@ -1,10 +1,10 @@
 import requests
-import urllib3
 from sqlalchemy.dialects.postgresql.psycopg import logger
 
-from utils.domain import Team, Person
-from data.constant import *
+from utils.domain import ICPCTeam,TeamMember,Coach
+from constant import *
 from utils.logger import setup_logger
+from typing import List
 
 import yaml  # Import the yaml module
 
@@ -63,22 +63,25 @@ def get_team(team_id):
             logger.error(f"获取队伍{team_id}成员失败,error:{err}")
             if i == MAX_RETRY - 1:
                 return None
-    coach = None
-    contestants = list()
-    cocoach = list()
+    contestants:List[TeamMember] = list()
+    coaches:List[Coach] = list()
     for member in members:
         if member['role'] == 'CONTESTANT':
-            contestants.append(Person(member['name'], member['name'], member['email']))
+            contestants.append(TeamMember(member['name'], member['name'], "unknown", "unknown", member['email']))
         elif member['role'] == 'COACH':
-            coach = Person(member['name'], member['name'], member['email'])
+            coaches.append(Coach(member['name'], member['name'], member['email']))
         elif member['role'] == 'COCOACH':
-            cocoach.append(Person(member['name'],member['name'],member['email']))
+            coaches.append(Coach(member['name'], member['name'], member['email']))
 
-    team = Team("",team_name, team_name, team_id, contestants, coach)
-    team.status = response['status']
-    team.contest_id = contest_id
-    team.contest_name = contest_name
-    team.cocoach = cocoach
+    team = ICPCTeam(chinese_name=team_name,
+                english_name=team_name,
+                school="unknown",
+                icpc_id=team_id,
+                coach=coaches,
+                members=contestants,
+                contest_id=contest_id,
+                contest_name=contest_name
+                )
     return team
 
 
@@ -120,9 +123,6 @@ def get_all_ac_team():
     response = requests.get(url, headers=headers,proxies=proxies)
     teams = response.json()
     return teams
-    # with open("acs.csv","w") as f:
-    #     for team in teams:
-    #         f.write(f"{team['team']['id']}\n")
 
 
 def get_contest_name():
@@ -135,6 +135,7 @@ def get_contest_name():
     return response['name']
 
 if __name__ == "__main__":
-    # team = get_team("904992")
-    get_all_ac_team()
+    team = get_team("1103045")
+    print(team)
+    # get_all_ac_team()
     # logger.info(f"{team.name},{team.status},{team.coach.name},{team.contestants[0].name},{team.contestants[1].name},{team.contestants[2].name}")

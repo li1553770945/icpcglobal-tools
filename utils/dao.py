@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, Boolean, DateTime
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import sessionmaker, relationship, Session
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 
@@ -7,7 +7,7 @@ from datetime import datetime
 Base = declarative_base()
 
 
-def init_database():
+def init_database() -> Session:
     engine = create_engine(r'sqlite:///data/icpc.db')
     Base.metadata.create_all(engine)
     Session = sessionmaker(bind=engine)

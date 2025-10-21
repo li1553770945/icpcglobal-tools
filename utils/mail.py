@@ -64,4 +64,4 @@ class Mail:
 if __name__ == '__main__':
     # Example usage:
     mail_client = Mail()
-    mail_client.send("2386360020@qq.com", "Hello", "<h1>Test Email</h1>")
+    mail_client.send("1553770945@qq.com", "Hello", "<h1>Test Email</h1>")
