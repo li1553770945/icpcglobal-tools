@@ -6,7 +6,7 @@ from utils.mail import Mail
 import re
 from utils.logger import setup_logger
 import sys
-from parse_teams import parse_teams_from_csv
+from utils.parse_teams import parse_teams_from_csv
 from utils.domain import LocalTeam
 
 from check_and_result.check import check
@@ -33,12 +33,17 @@ if __name__ == "__main__":
         mail = Mail()
         csv_teams = parse_teams_from_csv(team_file)
         for csv_team in csv_teams:
-            ok,errors = check(session=session,local_team=csv_team)
-            logger.info(f"队伍{csv_team.icpc_id}核验结果: {ok}, 错误信息: {errors}")
-            if ok:
-                handle_success(session=session,team=csv_team)
-            else:
-                handle_error(session=session,check_id=check_id,team=csv_team, errors=errors)
+            try:
+                ok,errors = check(session=session,local_team=csv_team)
+                logger.info(f"队伍{csv_team.icpc_id}核验结果: {ok}, 错误信息: {errors}")
+                if ok:
+                    handle_success(session=session,team=csv_team)
+                else:
+                    handle_error(session=session,check_id=check_id,team=csv_team, errors=errors)
+            except Exception as err:
+                logger.error(f"处理队伍{csv_team.icpc_id}时发生异常: {err}")
+                handle_error(session=session,check_id=check_id,team=csv_team, errors=["处理队伍时发生异常: "+str(err)])
+                continue
 
     else:
         logger.info("token已失效")

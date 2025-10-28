@@ -92,11 +92,13 @@ def test_token():
     }
     try:
         response = requests.get(url,headers=headers,proxies=proxies)
+        print(response)
         response = response.json()
         name = f"{response['firstName']} {response['lastName']}"
         logger.info(f"欢迎{name}")
         return True
-    except:
+    except Exception as err:
+        logger.error(f"token测试失败:{err}")
         return False
 
 
